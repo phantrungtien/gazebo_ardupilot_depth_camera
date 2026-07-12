@@ -47,6 +47,19 @@ To fly it, ArduPilot SITL in a second terminal:
 sim_vehicle.py -v ArduCopter -f gazebo-iris --model JSON --map --console
 ```
 
+To stop it: `Ctrl-C` in the terminal running it. If it was backgrounded:
+
+```bash
+pkill -f "gz sim"
+```
+
+`gz` is a Ruby launcher, so all three processes (`gz sim`, `gz sim server`,
+`gz sim gui`) report a process *name* of `ruby` — `pkill gz` and `pkill -x gz`
+match nothing. `-f` is the only thing that works, and it matches against whole
+command lines, so it also kills any script or shell whose own command line
+contains the string `gz sim`. Harmless from an interactive prompt; it will take
+a launcher script down with it.
+
 ## The camera
 
 | Stream | Resolution | FOV | Topic |
