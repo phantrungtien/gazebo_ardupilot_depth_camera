@@ -203,15 +203,39 @@
         dots wreck feature tracking), so sim IR matches the configuration you
         would actually fly. It does NOT match the emitter-on images.
 
-        Cost: two more 848x480 renders per frame. If the sim drags, drop these two
-        sensors' update_rate first - depth and color do not need to follow.
+        THROTTLED TO 5 Hz. What that buys, and what it does not:
+
+          depth arriving in ROS   16.5 Hz -> 21.7 Hz   (+32%)
+          sim real-time factor    0.54    -> 0.57      (i.e. nothing)
+
+        Nothing consumes infra today -- gate_detect flies on colour + depth -- yet infra1
+        still rendered every frame, because the world's ImageDisplay panel subscribes to
+        it (a Gazebo camera renders only while something listens, and the panel IS that
+        listener). infra2 rendered for no one at all. Throttling them hands that render
+        budget back to depth, which the controller does eat. That part is worth having.
+
+        But it does NOT make the sim keep up, and it would be wrong to claim otherwise.
+        Measured on this machine: with ZERO cameras subscribed the RTF is already 0.53,
+        and adding all three back does not move it. The ceiling is the physics step --
+        <max_step_size>0.001</max_step_size>, i.e. 1000 steps a second, which this box
+        cannot do in real time. Same 0.51-0.56 with ArduPilot SITL attached and lock_step
+        running, so it is not a headless artefact either.
+
+        That half-speed sim is the thing that drags MAVLink timesync out past a second
+        and makes MAVROS's parameter download time out, retry, and occasionally die on
+        the duplicate replies. Throttling the cameras does not fix it; only the step size
+        would, and that is ArduPilot's FDM rate, not a knob to turn casually.
+
+        Put these back to 30 the day you actually run VIO on them (VINS-Fusion,
+        ORB-SLAM3) -- and drop the ImageDisplay panels in gates_course.sdf if you need
+        the budget back.
       -->
       <sensor name="infra1" type="camera">
         <gz_frame_id>d435i_infra1_optical_frame</gz_frame_id>
         <pose>0 0 0 0 0 0</pose>
         <topic>/d435i/infra1/image_rect_raw</topic>
         <always_on>1</always_on>
-        <update_rate>30</update_rate>
+        <update_rate>5</update_rate>
         <camera>
           <horizontal_fov>1.518436</horizontal_fov>
           <image>
@@ -236,7 +260,7 @@
         <pose>0 -0.050 0 0 0 0</pose>
         <topic>/d435i/infra2/image_rect_raw</topic>
         <always_on>1</always_on>
-        <update_rate>30</update_rate>
+        <update_rate>5</update_rate>
         <camera>
           <horizontal_fov>1.518436</horizontal_fov>
           <image>
