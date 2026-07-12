@@ -1,0 +1,177 @@
+<?xml version="1.0" ?>
+<!--
+  gate_ring: a hoop the drone flies through.
+  16 cylinder segments arranged in the local Y-Z plane, so the ring's hole
+  axis is local +X. Each segment is TANGENT to the circle at its midpoint,
+  so the clear opening radius is exactly R - tube everywhere.
+
+  R (tube centreline) = 0.431 m, tube = 0.06 m -> clear radius 0.371 m.
+  That is the iris_with_d435i bounding radius in the plane across its
+  flight path (0.3210 m, set by the prop tips: rotor y=+/-0.22 + prop
+  radius 0.10) plus 5 cm of clearance all round. Keep RING_RADIUS in
+  mission_gates.py equal to the clear radius (0.371).
+
+  The ring HAS collision: hitting it is a real crash, as outdoors. It was
+  visual-only before, so that a slightly-off pass never crashed the run - but
+  that also made "flew through the hole" and "flew through the metal"
+  indistinguishable, and a mission could score a pass while punching through
+  the tube.
+
+  A clean pass still costs nothing: the clear radius (0.371 m) already leaves
+  5 cm around the drone's widest part (prop tips at 0.321 m), so only an actual
+  strike makes contact. To get the old forgiving behaviour back, delete the 16
+  <collision> elements below.
+  Place with <pose>x y z 0 0 yaw</pose>: the Z-yaw aims the hole along the
+  flight direction; z is the height of the ring CENTRE.
+-->
+<sdf version="1.9">
+  <model name="gate_ring">
+    <static>true</static>
+    <link name="ring">
+      <visual name="seg_0">
+        <pose>0 0.4310 0.0000 0.0000 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_0_collision">
+        <pose>0 0.4310 0.0000 0.0000 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_1">
+        <pose>0 0.3982 0.1649 0.3927 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_1_collision">
+        <pose>0 0.3982 0.1649 0.3927 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_2">
+        <pose>0 0.3048 0.3048 0.7854 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_2_collision">
+        <pose>0 0.3048 0.3048 0.7854 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_3">
+        <pose>0 0.1649 0.3982 1.1781 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_3_collision">
+        <pose>0 0.1649 0.3982 1.1781 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_4">
+        <pose>0 0.0000 0.4310 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_4_collision">
+        <pose>0 0.0000 0.4310 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_5">
+        <pose>0 -0.1649 0.3982 1.9635 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_5_collision">
+        <pose>0 -0.1649 0.3982 1.9635 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_6">
+        <pose>0 -0.3048 0.3048 2.3562 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_6_collision">
+        <pose>0 -0.3048 0.3048 2.3562 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_7">
+        <pose>0 -0.3982 0.1649 2.7489 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_7_collision">
+        <pose>0 -0.3982 0.1649 2.7489 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_8">
+        <pose>0 -0.4310 0.0000 3.1416 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_8_collision">
+        <pose>0 -0.4310 0.0000 3.1416 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_9">
+        <pose>0 -0.3982 -0.1649 3.5343 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_9_collision">
+        <pose>0 -0.3982 -0.1649 3.5343 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_10">
+        <pose>0 -0.3048 -0.3048 3.9270 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_10_collision">
+        <pose>0 -0.3048 -0.3048 3.9270 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_11">
+        <pose>0 -0.1649 -0.3982 4.3197 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_11_collision">
+        <pose>0 -0.1649 -0.3982 4.3197 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_12">
+        <pose>0 -0.0000 -0.4310 4.7124 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_12_collision">
+        <pose>0 -0.0000 -0.4310 4.7124 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_13">
+        <pose>0 0.1649 -0.3982 5.1051 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_13_collision">
+        <pose>0 0.1649 -0.3982 5.1051 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_14">
+        <pose>0 0.3048 -0.3048 5.4978 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_14_collision">
+        <pose>0 0.3048 -0.3048 5.4978 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+      <visual name="seg_15">
+        <pose>0 0.3982 -0.1649 5.8905 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+        <material><ambient>1 0.45 0 1</ambient><diffuse>1 0.45 0 1</diffuse><emissive>1 0.45 0 1</emissive></material>
+      </visual>
+      <collision name="seg_15_collision">
+        <pose>0 0.3982 -0.1649 5.8905 0 0</pose>
+        <geometry><cylinder><radius>0.06</radius><length>0.20</length></cylinder></geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

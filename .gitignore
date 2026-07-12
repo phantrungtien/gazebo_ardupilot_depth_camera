@@ -1,0 +1,16 @@
+# ArduPilot's own repository. Deliberately NOT vendored in here.
+#
+# It is cloned separately (see README) and left completely untouched, so
+# `git pull` on it can never conflict with our work. Everything of ours lives in
+# src/drone_vision/ and reaches into it only through model:// URIs resolved by
+# GZ_SIM_RESOURCE_PATH.
+src/ardupilot_gazebo/
+
+# Build output
+build/
+install/
+log/
+
+# Tool / session state, machine-specific
+.claude/
+.remember/

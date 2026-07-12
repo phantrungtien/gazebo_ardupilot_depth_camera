@@ -1,0 +1,447 @@
+<?xml version="1.0" ?>
+<!--
+  gates_course: iris on flat ground plus a single orange ring (gate_ring)
+  for the drone to fly through. Same base as iris_runway.sdf, except the
+  runway is replaced by a plain ground plane and the gate section is added
+  at the bottom.
+
+  The gate = a floating ring (model://gate_ring) at its centre height + a
+  stand (base pad + vertical post) reaching the ground, so the gate stands
+  upright with a leg on the ground. Post length = ring-centre height minus
+  the ring tube-centreline radius (0.431 m), which is exactly the ring's
+  lowest point (directly below the centre, independent of yaw).
+
+  The gate centre is in the Gazebo world frame, which here is ENU (X=East,
+  Y=North, Z=Up) with origin at the iris spawn. That is the same frame
+  MAVROS reports, so mission_gates.py commands these exact coordinates.
+  Keep the gate list here in sync with GATES in mission_gates.py.
+-->
+<sdf version="1.9">
+  <world name="gates_course">
+    <physics name="1ms" type="ignore">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    <plugin filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+    <plugin filename="gz-sim-imu-system"
+      name="gz::sim::systems::Imu">
+    </plugin>
+    <plugin filename="gz-sim-navsat-system"
+      name="gz::sim::systems::NavSat">
+    </plugin>
+
+    <scene>
+      <ambient>1.0 1.0 1.0</ambient>
+      <background>0.8 0.8 0.8</background>
+      <sky></sky>
+    </scene>
+
+    <spherical_coordinates>
+      <latitude_deg>-35.363262</latitude_deg>
+      <longitude_deg>149.165237</longitude_deg>
+      <elevation>584</elevation>
+      <heading_deg>0</heading_deg>
+      <surface_model>EARTH_WGS84</surface_model>
+    </spherical_coordinates>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.8 0.8 0.8 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Was "axes": three 10 m debug bars (red +X, green +Y, blue +Z) plus the
+         navsat sensor. The bars are gone. The red +X bar sat at z = 0.1, which is
+         9.5 cm directly under the D435i, and the depth camera saw it: it returned
+         0.17-0.37 m across the whole bottom of every depth frame - a phantom
+         obstacle right in front of the nose, and one that would poison obstacle
+         avoidance, point clouds and VIO. Debug geometry is not free once a range
+         sensor is on board.
+
+         The navsat sensor stays: the world loads gz-sim-navsat-system, and this
+         sensor is what that system attaches to. (ArduPilotPlugin does not read it
+         - it derives GPS from the model pose - but removing it would leave the
+         system with nothing to drive.) -->
+    <model name="navsat_origin">
+      <static>1</static>
+      <link name="link">
+        <sensor name="navsat_sensor" type="navsat">
+          <always_on>1</always_on>
+          <update_rate>1</update_rate>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- Plain ground instead of model://runway. The runway model's collision is
+         an infinite plane and is this world's only ground, so it cannot just be
+         dropped: the iris would spawn into free fall. Same infinite collision
+         here, minus the airstrip texture and airfield mesh. -->
+    <model name="ground">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry><plane><normal>0 0 1</normal><size>1000 1000</size></plane></geometry>
+          <material>
+            <ambient>0.35 0.45 0.30 1</ambient>
+            <diffuse>0.35 0.45 0.30 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <include>
+      <uri>model://iris_with_d435i</uri>
+      <!-- Yaw 0 = nose (and the welded forward camera) looks along +X, straight
+           at gate_1. The iris_runway default of yaw 180 pointed it AWAY from
+           the gate: the camera never saw the ring and the mission chased a
+           false-positive orange blob westward. -->
+      <pose degrees="true">0 0 0.195 0 0 0</pose>
+    </include>
+
+    <!-- ===== racing gate (1, must match GATES in mission_gates.py) =====
+         5 m due East of the iris spawn, ring centre 3.5 m up. Yaw 0 aims the
+         hole along +X, the direction the drone arrives from home (0,0). The
+         clear hole spans 3.129..3.871 m in Z, so it clears the 3.069 m post
+         whose top stops at the ring's lowest tube point. -->
+
+    <include>
+      <name>gate_1</name>
+      <uri>model://gate_ring</uri>
+      <pose>5 0 3.5 0 0 0</pose>
+    </include>
+    <!-- The stand has collision, and so does the ring now (see gate_ring/model.sdf).
+         Before, both were visual-only: the depth camera saw a 3 m steel pole and a
+         metal hoop that physics let the drone fly straight through. Sensor and
+         physics disagreeing is the one thing a sim must never do quietly - it hands
+         you a free pass you would not get outdoors.
+
+         A clean pass still costs nothing. The post stops at 3.069 m and the ring's
+         lowest tube point is at 3.129 m, so anything going through the hole clears
+         the post, and the hole's clear radius (0.371 m) already leaves 5 cm around
+         the drone's prop tips (0.321 m). Only a real strike now makes contact. -->
+    <model name="stand_1">
+      <static>true</static>
+      <pose>5 0 0 0 0 0</pose>
+      <link name="l">
+        <visual name="base">
+          <pose>0 0 0.05 0 0 0</pose>
+          <geometry><cylinder><radius>0.35</radius><length>0.10</length></cylinder></geometry>
+          <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+        </visual>
+        <collision name="base_collision">
+          <pose>0 0 0.05 0 0 0</pose>
+          <geometry><cylinder><radius>0.35</radius><length>0.10</length></cylinder></geometry>
+        </collision>
+        <visual name="post">
+          <pose>0 0 1.5345 0 0 0</pose>
+          <geometry><cylinder><radius>0.08</radius><length>3.069</length></cylinder></geometry>
+          <material><ambient>0.25 0.25 0.25 1</ambient><diffuse>0.25 0.25 0.25 1</diffuse></material>
+        </visual>
+        <collision name="post_collision">
+          <pose>0 0 1.5345 0 0 0</pose>
+          <geometry><cylinder><radius>0.08</radius><length>3.069</length></cylinder></geometry>
+        </collision>
+      </link>
+    </model>
+
+
+    <!--
+      GUI. This is the stock gz-sim8 gui.config plugin list, unchanged, with three
+      ImageDisplay panels appended so the D435i streams open with the world instead
+      of being clicked in each time.
+
+      Note the cameras only render while something is subscribed - an open
+      ImageDisplay IS that subscriber. Close the panels and the cameras go idle,
+      which is also why they cost nothing when you are not looking.
+
+      infra2 is left out on purpose: open a fourth ImageDisplay on
+      /d435i/infra2/image_rect_raw and put it beside infra1 to actually SEE the
+      50 mm stereo baseline (near objects shift sideways between the two).
+
+      depth is a float32 metres image, not 8-bit. ImageDisplay may render it black
+      or blown out - I could not verify it from here. If it is useless, the topic
+      picker on that panel lets you switch, or drop the panel and visualise
+      /d435i/depth/image_rect_raw/points as a point cloud instead.
+
+      To go back to the default GUI: delete this whole <gui> block.
+    -->
+    <gui fullscreen="0">
+      <!-- 3D scene -->
+      <plugin filename="MinimalScene" name="3D View">
+        <gz-gui>
+          <title>3D View</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+
+        <engine>ogre2</engine>
+        <scene>scene</scene>
+        <ambient_light>0.4 0.4 0.4</ambient_light>
+        <background_color>0.8 0.8 0.8</background_color>
+        <camera_pose>-4 0 2 0 0.25 0</camera_pose>
+      </plugin>
+
+      <!-- Plugins that add functionality to the scene -->
+      <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
+        <gz-gui>
+          <property key="state" type="string">floating</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="GzSceneManager" name="Scene Manager">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="InteractiveViewControl" name="Interactive view control">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="CameraTracking" name="Camera Tracking">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="MarkerManager" name="Marker manager">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="SelectEntities" name="Select Entities">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+
+      <plugin filename="Spawn" name="Spawn Entities">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+
+      <plugin filename="VisualizationCapabilities" name="Visualization Capabilities">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- World control -->
+      <plugin filename="WorldControl" name="World control">
+        <gz-gui>
+          <title>World control</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">72</property>
+          <property type="double" key="z">1</property>
+
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="left" target="left"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+
+        <play_pause>true</play_pause>
+        <step>true</step>
+        <start_paused>true</start_paused>
+        <use_event>true</use_event>
+
+      </plugin>
+
+      <!-- World statistics -->
+      <plugin filename="WorldStats" name="World stats">
+        <gz-gui>
+          <title>World stats</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">110</property>
+          <property type="double" key="width">290</property>
+          <property type="double" key="z">1</property>
+
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+
+        <sim_time>true</sim_time>
+        <real_time>true</real_time>
+        <real_time_factor>true</real_time_factor>
+        <iterations>true</iterations>
+      </plugin>
+
+      <!-- Insert simple shapes -->
+      <plugin filename="Shapes" name="Shapes">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="x" type="double">0</property>
+          <property key="y" type="double">0</property>
+          <property key="width" type="double">300</property>
+          <property key="height" type="double">50</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+          <property key="cardBackground" type="string">#666666</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- Insert lights -->
+      <plugin filename="Lights" name="Lights">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="x" type="double">300</property>
+          <property key="y" type="double">0</property>
+          <property key="width" type="double">150</property>
+          <property key="height" type="double">50</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+          <property key="cardBackground" type="string">#666666</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- Translate / rotate -->
+      <plugin filename="TransformControl" name="Transform control">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="x" type="double">0</property>
+          <property key="y" type="double">50</property>
+          <property key="width" type="double">250</property>
+          <property key="height" type="double">50</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+          <property key="cardBackground" type="string">#777777</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- Screenshot -->
+      <plugin filename="Screenshot" name="Screenshot">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="x" type="double">250</property>
+          <property key="y" type="double">50</property>
+          <property key="width" type="double">50</property>
+          <property key="height" type="double">50</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+          <property key="cardBackground" type="string">#777777</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- Copy/Paste -->
+      <plugin filename="CopyPaste" name="CopyPaste">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="x" type="double">300</property>
+          <property key="y" type="double">50</property>
+          <property key="width" type="double">100</property>
+          <property key="height" type="double">50</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+          <property key="cardBackground" type="string">#777777</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- Inspector -->
+      <plugin filename="ComponentInspector" name="Component inspector">
+        <gz-gui>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- Entity tree -->
+      <plugin filename="EntityTree" name="Entity tree">
+        <gz-gui>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+      </plugin>
+
+      <plugin filename="ImageDisplay" name="D435i color">
+        <gz-gui>
+          <title>D435i color</title>
+          <property key="state" type="string">docked</property>
+        </gz-gui>
+        <topic>/d435i/color/image_raw</topic>
+        <topic_picker>true</topic_picker>
+      </plugin>
+
+      <plugin filename="ImageDisplay" name="D435i depth">
+        <gz-gui>
+          <title>D435i depth</title>
+          <property key="state" type="string">docked</property>
+        </gz-gui>
+        <topic>/d435i/depth/image_rect_raw</topic>
+        <topic_picker>true</topic_picker>
+      </plugin>
+
+      <plugin filename="ImageDisplay" name="D435i infra1">
+        <gz-gui>
+          <title>D435i infra1</title>
+          <property key="state" type="string">docked</property>
+        </gz-gui>
+        <topic>/d435i/infra1/image_rect_raw</topic>
+        <topic_picker>true</topic_picker>
+      </plugin>
+    </gui>
+
+  </world>
+</sdf>
