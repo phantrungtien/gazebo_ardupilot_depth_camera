@@ -1,4 +1,4 @@
-# gz_ws — Iris + Intel RealSense D435i
+# Iris + Intel RealSense D435i
 
 Gazebo Harmonic simulation of an ArduPilot Iris quadrotor carrying a **RealSense
 D435i depth camera**, nose-mounted and forward-facing, replacing the 3-axis
